@@ -108,40 +108,59 @@
 ];
 
   const stage = document.getElementById('stage');
-  const counter = document.getElementById('counter');
-  const zoneLeft = document.getElementById('zoneLeft');
-  const zoneRight = document.getElementById('zoneRight');
+const counter = document.getElementById('counter');
+const zoneLeft = document.getElementById('zoneLeft');
+const zoneRight = document.getElementById('zoneRight');
 
-  let current = 0;
-  const imgEls = [];
+let current = 0;
+let imgEls = [];
 
-  // preload all images into the stage, stacked, only one visible at a time
-  photos.forEach((src, i) => {
-    const img = document.createElement('img');
-    img.src = src;
-    if(i === 0) img.classList.add('active');
-    stage.insertBefore(img, zoneLeft);
-    imgEls.push(img);
-  });
-
-  function show(index){
-    current = (index + photos.length) % photos.length;
-    imgEls.forEach((img, i) => img.classList.toggle('active', i === current));
-    counter.textContent = String(current + 1).padStart(2, '0') + ' / ' + String(photos.length).padStart(2, '0');
+// Fisher-Yates shuffle
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
+  return arr;
+}
 
-  function next(){ show(current + 1); }
-  function prev(){ show(current - 1); }
+// Pulls the current file list from your GitHub repo's photos folder
+fetch('https://api.github.com/repos/flying-buttress/Archive/contents/photos')
+  .then(res => res.json())
+  .then(files => {
+    const photos = shuffle(
+      files
+        .filter(f => /\.(jpe?g|png|webp)$/i.test(f.name))
+        .map(f => 'photos/' + f.name)
+    );
 
-  zoneLeft.addEventListener('click', prev);
-  zoneRight.addEventListener('click', next);
+    photos.forEach((src, i) => {
+      const img = document.createElement('img');
+      img.src = src;
+      if (i === 0) img.classList.add('active');
+      stage.insertBefore(img, zoneLeft);
+      imgEls.push(img);
+    });
 
-  document.addEventListener('keydown', (e) => {
-    if(e.key === 'ArrowRight') next();
-    if(e.key === 'ArrowLeft') prev();
+    function show(index) {
+      current = (index + photos.length) % photos.length;
+      imgEls.forEach((img, i) => img.classList.toggle('active', i === current));
+      counter.textContent = String(current + 1).padStart(2, '0') + ' / ' + String(photos.length).padStart(2, '0');
+    }
+
+    function next() { show(current + 1); }
+    function prev() { show(current - 1); }
+
+    zoneLeft.addEventListener('click', prev);
+    zoneRight.addEventListener('click', next);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') next();
+      if (e.key === 'ArrowLeft') prev();
+    });
+
+    show(0);
   });
-
-  show(0);
 </script>
 
 </body>
