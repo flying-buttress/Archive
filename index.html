@@ -209,6 +209,12 @@ fetch('https://api.github.com/repos/flying-buttress/Archive/contents/photos')
         .map(f => 'photos/' + f.name)
     );
 
+    // Add captions here for specific photos — anything not listed just shows the counter
+const captions = {
+  "20241127_004.jpg": "Studio, November 2024",
+  "20230217_0046.jpg": "On location, NYC"
+};
+
     photos.forEach((src, i) => {
       const img = document.createElement('img');
       img.src = src;
