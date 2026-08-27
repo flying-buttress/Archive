@@ -224,10 +224,16 @@ const captions = {
     });
 
     function show(index) {
-      current = (index + photos.length) % photos.length;
-      imgEls.forEach((img, i) => img.classList.toggle('active', i === current));
-      counter.textContent = String(current + 1).padStart(2, '0') + ' / ' + String(photos.length).padStart(2, '0');
-    }
+  current = (index + photos.length) % photos.length;
+  imgEls.forEach((img, i) => img.classList.toggle('active', i === current));
+
+  const filename = photos[current].split('/').pop();
+  if (captions[filename]) {
+    counter.textContent = captions[filename];
+  } else {
+    counter.textContent = String(current + 1).padStart(2, '0') + ' / ' + String(photos.length).padStart(2, '0');
+  }
+}
 
     function next() { show(current + 1); }
     function prev() { show(current - 1); }
