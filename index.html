@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lloyd — Photography</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0b0b0a;
+    --fg: #f3f1ea;
+    --fg-dim: rgba(243,241,234,0.55);
+    --accent: #c89b3c;
+    --line: rgba(243,241,234,0.18);
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html, body{
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Inter', sans-serif;
+    height: 100%;
+  }
+
+  body{
+    scroll-snap-type: y mandatory;
+    overflow-y: scroll;
+    scroll-behavior: smooth;
+  }
+
+  ::-webkit-scrollbar{ display:none; }
+
+  /* ---------- fixed chrome ---------- */
+
+  .mark{
+    position: fixed;
+    top: 28px;
+    left: 28px;
+    z-index: 20;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--fg);
+    mix-blend-mode: difference;
+  }
+
+  .mark span{ color: var(--accent); mix-blend-mode: normal; }
+
+  .counter{
+    position: fixed;
+    top: 28px;
+    right: 28px;
+    z-index: 20;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--fg);
+    mix-blend-mode: difference;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .counter .current{ color: var(--accent); mix-blend-mode: normal; font-weight: 500; }
+
+  /* frame-edge ticks, like a contact sheet / film strip */
+  .filmstrip{
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 28px;
+    z-index: 15;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 0 0 0 0;
+  }
+
+  .filmstrip .tick{
+    width: 10px;
+    height: 2px;
+    background: var(--line);
+    margin: 0 9px;
+  }
+
+  .progress-rail{
+    position: fixed;
+    right: 9px;
+    top: 80px;
+    bottom: 80px;
+    width: 1px;
+    background: var(--line);
+    z-index: 16;
+  }
+
+  .progress-fill{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: var(--accent);
+    height: 0%;
+    transition: height 0.1s linear;
+  }
+
+  .scroll-hint{
+    position: fixed;
+    bottom: 28px;
+    left: 28px;
+    z-index: 20;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-dim);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    mix-blend-mode: difference;
+    opacity: 1;
+    transition: opacity 0.4s ease;
+  }
+
+  .scroll-hint .line{
+    width: 24px;
+    height: 1px;
+    background: var(--fg-dim);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .scroll-hint .line::after{
+    content:'';
+    position: absolute;
+    left:-100%;
+    top:0;
+    width:100%;
+    height:100%;
+    background: var(--accent);
+    animation: slide 1.8s ease-in-out infinite;
+  }
+
+  @keyframes slide{
+    0%{ left:-100%; }
+    50%{ left: 0%; }
+    100%{ left: 100%; }
+  }
+
+  body.scrolled .scroll-hint{ opacity: 0; }
+
+  /* ---------- frames ---------- */
+
+  .frame{
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    scroll-snap-align: start;
+    overflow: hidden;
+  }
+
+  .frame img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: saturate(1.02);
+  }
+
+  .frame::after{
+    content:'';
+    position:absolute;
+    inset:0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 18%, rgba(0,0,0,0) 65%, rgba(0,0,0,0.65) 100%);
+    pointer-events: none;
+  }
+
+  .caption{
+    position: absolute;
+    left: 28px;
+    bottom: 36px;
+    z-index: 10;
+    max-width: 60%;
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .frame.in-view .caption{
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .caption .index{
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 13px;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 6px;
+    letter-spacing: 0.04em;
+  }
+
+  .caption .title{
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: clamp(22px, 3vw, 32px);
+    line-height: 1.15;
+  }
+
+  .caption .meta{
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: var(--fg-dim);
+    margin-top: 6px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ---------- opening frame ---------- */
+
+  .hero{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 0 28px 80px;
+  }
+
+  .hero img{ filter: saturate(1.02) brightness(0.92); }
+
+  .hero .eyebrow{
+    position: relative;
+    z-index: 10;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--fg-dim);
+    margin-bottom: 18px;
+  }
+
+  .hero h1{
+    position: relative;
+    z-index: 10;
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: clamp(40px, 8vw, 96px);
+    line-height: 0.98;
+    letter-spacing: -0.01em;
+  }
+
+  .hero h1 em{
+    font-style: italic;
+    font-weight: 300;
+    color: var(--accent);
+  }
+
+  .hero .sub{
+    position: relative;
+    z-index: 10;
+    margin-top: 20px;
+    font-size: 14px;
+    color: var(--fg-dim);
+    max-width: 480px;
+    line-height: 1.5;
+  }
+
+  /* ---------- closing frame ---------- */
+
+  .end{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+  }
+
+  .end-inner{
+    text-align: center;
+  }
+
+  .end .index{
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--accent);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    margin-bottom: 18px;
+    display: block;
+  }
+
+  .end h2{
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: clamp(30px, 5vw, 56px);
+    margin-bottom: 22px;
+  }
+
+  .end a{
+    color: var(--fg);
+    text-decoration: none;
+    border-bottom: 1px solid var(--accent);
+    padding-bottom: 3px;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    transition: color 0.3s ease, border-color 0.3s ease;
+  }
+
+  .end a:hover{ color: var(--accent); }
+
+  @media (prefers-reduced-motion: reduce){
+    body{ scroll-behavior: auto; }
+    .caption, .scroll-hint .line::after{ transition: none; animation: none; }
+  }
+
+  @media (max-width: 600px){
+    .caption{ max-width: 82%; }
+    .mark, .counter{ font-size: 10px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="mark">Lloyd <span>／</span> Portfolio</div>
+  <div class="counter"><span class="current">01</span> / 07</div>
+  <div class="progress-rail"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="filmstrip" id="filmstrip"></div>
+  <div class="scroll-hint" id="scrollHint"><div class="line"></div>Scroll</div>
+
+  <main id="frames">
+
+    <section class="frame hero" data-index="01">
+      <img src="https://images.unsplash.com/photo-1500534623283-312aade485b7?q=80&w=1600&auto=format&fit=crop" alt="">
+      <div class="eyebrow">Advertising &amp; Commercial Photography — New York</div>
+      <h1>Lloyd<br><em>Selected Work</em></h1>
+      <div class="sub">Eight years shooting for brands, products, and people. Scroll to move through the set.</div>
+    </section>
+
+    <section class="frame" data-index="02">
+      <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=1600&auto=format&fit=crop" alt="">
+      <div class="caption">
+        <span class="index">02 / 07</span>
+        <div class="title">Product, in light</div>
+        <div class="meta">Studio — 2025</div>
+      </div>
+    </section>
+
+    <section class="frame" data-index="03">
+      <img src="https://images.unsplash.com/photo-1493246507139-91e8fad9978e?q=80&w=1600&auto=format&fit=crop" alt="">
+      <div class="caption">
+        <span class="index">03 / 07</span>
+        <div class="title">Campaign, unposed</div>
+        <div class="meta">On location — 2024</div>
+      </div>
+    </section>
+
+    <section class="frame" data-index="04">
+      <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1600&auto=format&fit=crop" alt="">
+      <div class="caption">
+        <span class="index">04 / 07</span>
+        <div class="title">Portrait, direct</div>
+        <div class="meta">Studio — 2024</div>
+      </div>
+    </section>
+
+    <section class="frame" data-index="05">
+      <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1600&auto=format&fit=crop" alt="">
+      <div class="caption">
+        <span class="index">05 / 07</span>
+        <div class="title">Texture &amp; material</div>
+        <div class="meta">Studio — 2023</div>
+      </div>
+    </section>
+
+    <section class="frame" data-index="06">
+      <img src="https://images.unsplash.com/photo-1502920917128-1aa500764cbd?q=80&w=1600&auto=format&fit=crop" alt="">
+      <div class="caption">
+        <span class="index">06 / 07</span>
+        <div class="title">Scale &amp; setting</div>
+        <div class="meta">On location — 2023</div>
+      </div>
+    </section>
+
+    <section class="frame end" data-index="07">
+      <div class="end-inner">
+        <span class="index">07 / 07</span>
+        <h2>Let's work together</h2>
+        <a href="mailto:hello@lloydphoto.com">hello@lloydphoto.com</a>
+      </div>
+    </section>
+
+  </main>
+
+<script>
+  const frames = Array.from(document.querySelectorAll('.frame'));
+  const currentEl = document.querySelector('.counter .current');
+  const progressFill = document.getElementById('progressFill');
+  const filmstrip = document.getElementById('filmstrip');
+  const scrollHint = document.getElementById('scrollHint');
+  const total = frames.length;
+
+  // build tick marks along the right edge, one per frame
+  for(let i=0; i<total; i++){
+    const t = document.createElement('div');
+    t.className = 'tick';
+    filmstrip.appendChild(t);
+  }
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting && entry.intersectionRatio > 0.5){
+        entry.target.classList.add('in-view');
+        const idx = entry.target.dataset.index;
+        currentEl.textContent = idx;
+        const pct = (parseInt(idx, 10) / total) * 100;
+        progressFill.style.height = pct + '%';
+      } else {
+        entry.target.classList.remove('in-view');
+      }
+    });
+  }, { threshold: [0, 0.5, 1] });
+
+  frames.forEach(f => io.observe(f));
+
+  let hidden = false;
+  document.body.addEventListener('scroll', () => {
+    if(!hidden){
+      document.body.classList.add('scrolled');
+      hidden = true;
+    }
+  }, { passive: true });
+</script>
+
+</body>
+</html>
