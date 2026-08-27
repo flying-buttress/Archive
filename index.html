@@ -89,15 +89,14 @@
   bottom: 28px;
   left: 28px;
   z-index: 20;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1px solid var(--fg-dim);
+  border: none;
   background: transparent;
   color: var(--fg);
   font-family: 'Inter', sans-serif;
-  font-style: italic;
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
   cursor: pointer;
   mix-blend-mode: difference;
 }
@@ -161,7 +160,7 @@
   <div class="mark">Lloyd McCullough — Archive</div>
   <div class="counter" id="counter">01 / 06</div>
 
-  <button class="info-btn" id="infoBtn" aria-label="Info">i</button>
+  <button class="info-btn" id="infoBtn">Info</button>
 
 <div class="info-overlay" id="infoOverlay">
   <div class="info-panel">
@@ -237,8 +236,7 @@ fetch('https://api.github.com/repos/flying-buttress/Archive/contents/photos')
 
     show(0);
   });
-</script>
-const infoBtn = document.getElementById('infoBtn');
+  const infoBtn = document.getElementById('infoBtn');
 const infoOverlay = document.getElementById('infoOverlay');
 const infoClose = document.getElementById('infoClose');
 
@@ -247,5 +245,7 @@ infoClose.addEventListener('click', () => infoOverlay.classList.remove('open'));
 infoOverlay.addEventListener('click', (e) => {
   if(e.target === infoOverlay) infoOverlay.classList.remove('open');
 });
+</script>
+
 </body>
 </html>
