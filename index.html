@@ -228,12 +228,9 @@ const captions = {
   imgEls.forEach((img, i) => img.classList.toggle('active', i === current));
 
   const filename = photos[current].split('/').pop();
-  if (captions[filename]) {
-    counter.textContent = captions[filename];
-  } else {
-    counter.textContent = String(current + 1).padStart(2, '0') + ' / ' + String(photos.length).padStart(2, '0');
-  }
+  counter.textContent = captions[filename] || '';
 }
+
 
     function next() { show(current + 1); }
     function prev() { show(current - 1); }
